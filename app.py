@@ -1,7 +1,4 @@
 """
-Streamlit — Indice de performance d'un étudiant (Régression, Student_Performance)
-Même principe que l'application de régression du prof (app_voiture.py) : on recharge les
-encodeurs et le pipeline du meilleur modèle (RobustScaler + régresseur) sauvegardés dans le notebook.
 
 En local :  streamlit run app.py
 """
@@ -11,7 +8,7 @@ import pandas as pd
 import joblib as jb
 import streamlit as st
 
-st.set_page_config(page_title="Performance étudiante", page_icon="🎓", layout="wide")
+st.set_page_config(page_title="Performance étudiante", page_icon="📚", layout="centered")
 
 
 # ---------- Objets issus du notebook (chargés une seule fois) ----------
@@ -45,17 +42,11 @@ def Pred_func_csv(fichier):
     return tableau
 
 
-# ---------- Barre latérale ----------
-with st.sidebar:
-    st.header("À propos")
-    st.write("Six algorithmes de régression ont été comparés (linéaire, Ridge, Lasso, arbre, "
-             "Random Forest, XGBoost) ; le meilleur sur la validation est utilisé ici.")
-    st.caption("Projet Machine Learning — régression")
+st.title("📚 Indice de performance")
+st.caption("Estimation de l'indice de performance (sur 100) d'un étudiant.")
+onglet_un, onglet_csv = st.tabs(["Un étudiant", "Fichier CSV"])
 
-st.title("🎓 Quel indice de performance pour cet étudiant ?")
-choix = st.radio("Mode", ["Un étudiant", "Un fichier CSV"], horizontal=True)
-
-if choix == "Un étudiant":
+with onglet_un:
     gauche, droite = st.columns(2)
     with gauche:
         heures = st.slider("Heures de révision", 1, 9, 5)
@@ -65,12 +56,13 @@ if choix == "Un étudiant":
         sommeil = st.slider("Heures de sommeil", 4, 9, 7)
         sujets = st.slider("Sujets d'entraînement traités", 0, 9, 4)
 
-    if st.button("Lancer la prédiction", type="primary"):
+    if st.button("Prédire", type="primary", use_container_width=True):
         try:
-            st.metric("Indice de performance estimé (sur 100)", Pred_func(heures, notes_prec, activites, sommeil, sujets))
+            resultat = Pred_func(heures, notes_prec, activites, sommeil, sujets)
+            st.success(f"**Indice de performance estimé (sur 100) :** {resultat}")
         except Exception as erreur:
             st.error(f"Prédiction impossible : {erreur}")
-else:
+with onglet_csv:
     st.info("Colonnes attendues, dans cet ordre : Hours Studied, Previous Scores, Extracurricular Activities, "
             "Sleep Hours, Sample Question Papers Practiced.")
     fichier = st.file_uploader("Choisir un fichier CSV", type="csv")
@@ -78,7 +70,7 @@ else:
         try:
             tableau = Pred_func_csv(fichier)
             st.dataframe(tableau, use_container_width=True)
-            st.download_button("Récupérer les résultats (CSV)", tableau.to_csv(index=False).encode("utf-8"),
+            st.download_button("Télécharger les résultats", tableau.to_csv(index=False).encode("utf-8"),
                                "resultats_etudiants.csv", "text/csv")
         except Exception as erreur:
             st.error(f"Fichier non traité : {erreur}")
